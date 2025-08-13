@@ -278,9 +278,9 @@ window.addEventListener('resize', function() {
     }
 });
 
-// Add loading state to buttons
+// Add loading state to buttons (excluding calculator button)
 document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('btn') && !e.target.classList.contains('btn-outline')) {
+    if (e.target.classList.contains('btn') && !e.target.classList.contains('btn-outline') && !e.target.closest('#solarCalculator')) {
         const originalText = e.target.innerHTML;
         e.target.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
         e.target.disabled = true;
@@ -318,47 +318,42 @@ function initSolarCalculator() {
     
     const calculatorForm = document.getElementById('solarCalculator');
     const systemSizeSelect = document.getElementById('systemSize');
-    const customSizeInput = document.getElementById('customSize');
     const presetButtons = document.querySelectorAll('.preset-btn');
+    
+    // Check if required elements exist
+    if (!calculatorForm) {
+        console.error('Calculator form not found');
+        return;
+    }
+    if (!systemSizeSelect) {
+        console.error('System size select not found');
+        return;
+    }
+    
+    console.log('All required elements found');
     
     // Handle system size selection
     systemSizeSelect.addEventListener('change', function() {
         console.log('System size changed to:', this.value);
-        console.log('SOLAR_CONFIG available:', !!SOLAR_CONFIG);
-        console.log('System pricing:', SOLAR_CONFIG?.systemPricing);
         
-        if (this.value === 'custom') {
-            customSizeInput.disabled = false;
-            customSizeInput.focus();
-            // Clear installation cost for custom size
-            document.getElementById('installationCost').value = '';
-        } else {
-            customSizeInput.disabled = true;
-            customSizeInput.value = '';
-            // Auto-fill installation cost based on selected size
+        if (this.value && this.value !== '') {
+            // Store installation cost for calculations
             if (SOLAR_CONFIG && SOLAR_CONFIG.systemPricing && SOLAR_CONFIG.systemPricing[this.value]) {
                 const cost = SOLAR_CONFIG.systemPricing[this.value];
-                console.log('Auto-filling installation cost:', cost);
-                document.getElementById('installationCost').value = cost;
+                console.log('Setting installation cost for', this.value, 'kW:', cost);
+                window.currentInstallationCost = cost;
             } else {
-                console.log('No pricing found for size:', this.value);
+                console.error('No pricing found for system size:', this.value);
             }
-        }
-    });
-    
-    // Handle custom size input for installation cost estimation
-    customSizeInput.addEventListener('input', function() {
-        const customSize = parseFloat(this.value);
-        if (customSize > 0) {
-            // Estimate installation cost based on size (rough calculation)
-            const estimatedCost = Math.round(customSize * 120000); // Approx 120k per kW
-            document.getElementById('installationCost').value = estimatedCost;
+        } else {
+            console.log('No system size selected');
         }
     });
     
     // Handle form submission
     calculatorForm.addEventListener('submit', function(e) {
         e.preventDefault();
+        console.log('Form submitted, starting calculation...');
         calculateSolarROI();
     });
     
@@ -372,61 +367,24 @@ function initSolarCalculator() {
     
     // Initialize with default values
     setDefaultValues();
-    
-    // Test auto-fill functionality
-    setTimeout(() => {
-        console.log('Testing auto-fill functionality...');
-        if (systemSizeSelect.value && systemSizeSelect.value !== 'custom') {
-            const cost = SOLAR_CONFIG.systemPricing[systemSizeSelect.value];
-            if (cost) {
-                console.log('Setting initial installation cost for', systemSizeSelect.value, 'kW:', cost);
-                document.getElementById('installationCost').value = cost;
-            }
-        }
-        
-        // Add a manual trigger button for testing
-        const testButton = document.createElement('button');
-        testButton.type = 'button';
-        testButton.className = 'btn btn-sm btn-outline-secondary mt-2';
-        testButton.textContent = 'Test Auto-fill';
-        testButton.onclick = function() {
-            const selectedSize = systemSizeSelect.value;
-            if (selectedSize && selectedSize !== 'custom') {
-                const cost = SOLAR_CONFIG.systemPricing[selectedSize];
-                if (cost) {
-                    document.getElementById('installationCost').value = cost;
-                    showNotification(`Auto-filled installation cost: LKR ${cost.toLocaleString()}`, 'success');
-                }
-            }
-        };
-        document.getElementById('installationCost').parentNode.appendChild(testButton);
-    }, 100);
 }
 
 function setDefaultValues() {
-    // Set realistic default values for Sri Lanka from config
-    document.getElementById('feedInTariff').value = SOLAR_CONFIG.tariffs.feedInTariff;
-    document.getElementById('monthlyGenerationPerKW').value = SOLAR_CONFIG.performance.monthlyGenerationPerKW;
-    document.getElementById('systemLosses').value = SOLAR_CONFIG.performance.systemLosses;
-    document.getElementById('maintenanceCost').value = SOLAR_CONFIG.performance.maintenanceCost;
-    document.getElementById('tariffIncrease').value = SOLAR_CONFIG.performance.tariffIncrease;
+    // Set default values for visible fields
+    // Other values will be calculated automatically
 }
 
 function applyPreset(preset) {
     if (SOLAR_CONFIG.presets[preset]) {
         const presetData = SOLAR_CONFIG.presets[preset];
-        document.getElementById('systemSize').value = presetData.systemSize;
-        document.getElementById('installationCost').value = presetData.installationCost;
+        const systemSizeSelect = document.getElementById('systemSize');
+        
+        systemSizeSelect.value = presetData.systemSize;
         document.getElementById('monthlyConsumption').value = presetData.monthlyConsumption;
         
-        // Enable custom size if needed
-        if (preset === 'commercial') {
-            document.getElementById('systemSize').value = 'custom';
-            document.getElementById('customSize').disabled = false;
-            document.getElementById('customSize').value = '20';
-        } else {
-            document.getElementById('customSize').disabled = true;
-            document.getElementById('customSize').value = '';
+        // Store installation cost for calculations
+        if (SOLAR_CONFIG.systemPricing[presetData.systemSize]) {
+            window.currentInstallationCost = SOLAR_CONFIG.systemPricing[presetData.systemSize];
         }
         
         // Auto-calculate
@@ -435,85 +393,114 @@ function applyPreset(preset) {
 }
 
 function calculateSolarROI() {
+    console.log('Starting calculation...');
+    
     // Get input values
-    const systemSize = parseFloat(document.getElementById('systemSize').value) || 
-                      parseFloat(document.getElementById('customSize').value) || 0;
-    const installationCost = parseFloat(document.getElementById('installationCost').value) || 0;
+    const systemSize = parseFloat(document.getElementById('systemSize').value) || 0;
     const monthlyConsumption = parseFloat(document.getElementById('monthlyConsumption').value) || 0;
-    const electricityTariff = SOLAR_CONFIG.tariffs.electricityTariff; // Use hidden config value
-    const feedInTariff = parseFloat(document.getElementById('feedInTariff').value) || 0;
-    const monthlyGenerationPerKW = parseFloat(document.getElementById('monthlyGenerationPerKW').value) || 0;
-    const systemLosses = parseFloat(document.getElementById('systemLosses').value) || 0;
-    const maintenanceCost = parseFloat(document.getElementById('maintenanceCost').value) || 0;
-    const tariffIncrease = parseFloat(document.getElementById('tariffIncrease').value) || 0;
+    const installationCost = window.currentInstallationCost || 0;
+    
+    console.log('Input values:', { systemSize, monthlyConsumption, installationCost });
     
     // Validate inputs
-    if (!systemSize || !installationCost || !monthlyConsumption) {
-        showNotification('Please fill in all required fields', 'info');
+    if (!systemSize) {
+        showNotification('Please select a system size first', 'info');
         return;
     }
     
-    // Calculate system performance
-    const monthlyGeneration = systemSize * monthlyGenerationPerKW * (1 - systemLosses / 100);
-    const selfConsumption = Math.min(monthlyGeneration, monthlyConsumption);
-    const gridExport = Math.max(0, monthlyGeneration - monthlyConsumption);
-    
-    // Calculate monthly benefits
-    const monthlySavings = selfConsumption * electricityTariff;
-    const surplusRevenue = gridExport * feedInTariff;
-    const totalMonthlyBenefit = monthlySavings + surplusRevenue;
-    
-    // Calculate payback period
-    const paybackPeriod = installationCost / (totalMonthlyBenefit * 12);
-    
-    // Calculate 25-year analysis
-    const systemLifetime = 25;
-    let totalSavings = 0;
-    let currentTariff = electricityTariff;
-    
-    for (let year = 1; year <= systemLifetime; year++) {
-        const yearlyBenefit = totalMonthlyBenefit * 12;
-        totalSavings += yearlyBenefit;
-        currentTariff *= (1 + tariffIncrease / 100);
+    if (!monthlyConsumption) {
+        showNotification('Please enter your monthly power usage', 'info');
+        return;
     }
     
-    // Subtract maintenance costs
-    const totalMaintenanceCost = maintenanceCost * systemLifetime;
-    const netProfit = totalSavings - installationCost - totalMaintenanceCost;
+    if (!installationCost) {
+        showNotification('Please select a system size to get installation cost', 'info');
+        return;
+    }
     
-    // Calculate ROI
-    const roi = ((netProfit / installationCost) * 100);
+    console.log('All inputs validated successfully');
     
-    // Display results
-    displayResults({
-        paybackPeriod: paybackPeriod.toFixed(1),
-        roiPercentage: roi.toFixed(1),
-        monthlySavings: formatCurrency(monthlySavings),
-        surplusRevenue: formatCurrency(surplusRevenue),
-        totalMonthlyBenefit: formatCurrency(totalMonthlyBenefit),
-        monthlyGeneration: monthlyGeneration.toFixed(0),
-        selfConsumption: selfConsumption.toFixed(0),
-        gridExport: gridExport.toFixed(0),
-        totalSavings: formatCurrency(totalSavings),
-        netProfit: formatCurrency(netProfit)
+    // Calculate solar production: System Size (kW) * 5 * 30 (for month)
+    const monthlyGenerationPerKW = 5 * 30; // 150 kWh per kW per month
+    const totalMonthlyGeneration = systemSize * monthlyGenerationPerKW;
+    
+    // Calculate power given to CEB (surplus after self-consumption)
+    const powerGivenToCEB = Math.max(0, totalMonthlyGeneration - monthlyConsumption);
+    
+    // Get tariffs from config
+    const electricityTariff = SOLAR_CONFIG.tariffs.electricityTariff; // LKR 27.50/kWh
+    const feedInTariff = SOLAR_CONFIG.tariffs.feedInTariff; // LKR 27.06/kWh
+    
+    // Calculate monthly income
+    const electricityBillSavings = Math.min(totalMonthlyGeneration, monthlyConsumption) * electricityTariff;
+    const cebPaymentForSurplus = powerGivenToCEB * feedInTariff;
+    const totalMonthlyIncome = electricityBillSavings + cebPaymentForSurplus;
+    
+    // Calculate maintenance cost (5% of installation cost per year)
+    const annualMaintenanceCost = installationCost * 0.05;
+    const totalInvestment = installationCost + annualMaintenanceCost;
+    
+    // Calculate time to recover investment
+    const paybackPeriod = totalInvestment / (totalMonthlyIncome * 12);
+    
+    console.log('Calculation results:', {
+        monthlyGenerationPerKW,
+        totalMonthlyGeneration,
+        powerGivenToCEB,
+        electricityBillSavings,
+        cebPaymentForSurplus,
+        totalMonthlyIncome,
+        annualMaintenanceCost,
+        totalInvestment,
+        paybackPeriod
     });
     
-    // Show results section
-    document.getElementById('calculatorInitial').classList.add('d-none');
-    document.getElementById('calculatorResults').classList.remove('d-none');
+    // Display results
+    const results = {
+        installationCostDisplay: formatCurrency(installationCost),
+        monthlyGenerationPerKWDisplay: `${monthlyGenerationPerKW} kWh`,
+        monthlyGeneration: `${totalMonthlyGeneration.toFixed(0)} kWh`,
+        gridExport: `${powerGivenToCEB.toFixed(0)} kWh`,
+        monthlySavings: formatCurrency(electricityBillSavings),
+        surplusRevenue: formatCurrency(cebPaymentForSurplus),
+        totalMonthlyBenefit: formatCurrency(totalMonthlyIncome),
+        totalInvestment: formatCurrency(totalInvestment),
+        paybackPeriod: `${paybackPeriod.toFixed(1)} Years`
+    };
     
-    // Scroll to results
-    document.getElementById('calculatorResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    displayResults(results);
+    
+    // Show results section
+    const initialElement = document.getElementById('calculatorInitial');
+    const resultsElement = document.getElementById('calculatorResults');
+    
+    if (initialElement && resultsElement) {
+        initialElement.classList.add('d-none');
+        resultsElement.classList.remove('d-none');
+        
+        // Smoothly scroll to results (now below the button)
+        resultsElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        console.log('Results section shown successfully below the button');
+    } else {
+        console.error('Results elements not found:', { initialElement, resultsElement });
+    }
 }
 
 function displayResults(results) {
+    console.log('Displaying results:', results);
+    
     // Update all result fields
     Object.keys(results).forEach(key => {
         const element = document.getElementById(key);
         if (element) {
             element.textContent = results[key];
+            console.log(`Updated ${key}:`, results[key]);
+        } else {
+            console.warn(`Element with id '${key}' not found`);
         }
     });
+    
+    console.log('Results displayed:', results);
 }
 
 function formatCurrency(amount) {

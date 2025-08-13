@@ -14,45 +14,25 @@ const SOLAR_CONFIG = {
         feedInTariff: 27.06         // LKR/kWh
     },
     
-    // System performance defaults
-    performance: {
-        monthlyGenerationPerKW: 130,  // kWh per kW per month
-        systemLosses: 12,             // Percentage
-        maintenanceCost: 5000,        // LKR per year
-        tariffIncrease: 5             // Percentage per year
-    },
+
     
-    // Preset configurations
+    // Preset configurations for quick setup
     presets: {
         '3kw': {
             systemSize: '3',
-            installationCost: 600000,
-            monthlyConsumption: 300,
-            description: 'Small Home'
+            monthlyConsumption: 300
         },
         '5kw': {
             systemSize: '5',
-            installationCost: 800000,
-            monthlyConsumption: 500,
-            description: 'Medium Home'
+            monthlyConsumption: 500
         },
         '6kw': {
             systemSize: '6',
-            installationCost: 900000,
-            monthlyConsumption: 600,
-            description: 'Large Home'
+            monthlyConsumption: 600
         },
         '10kw': {
             systemSize: '10',
-            installationCost: 1200000,
-            monthlyConsumption: 1000,
-            description: 'Very Large Home'
-        },
-        'commercial': {
-            systemSize: '20',
-            installationCost: 2400000,
-            monthlyConsumption: 2000,
-            description: 'Business Setup'
+            monthlyConsumption: 1000
         }
     }
 };

@@ -116,50 +116,82 @@
                                             <option value="5">5 kW</option>
                                             <option value="6">6 kW</option>
                                             <option value="10">10 kW</option>
-                                            <option value="custom">Custom</option>
                                         </select>
                                     </div>
+
                                     <div class="col-md-6">
-                                        <label class="form-label fw-semibold">Custom Size (kW)</label>
-                                        <input type="number" class="form-control" id="customSize" placeholder="Enter kW" min="1" max="50" step="0.1" disabled>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-semibold">Installation Cost (LKR)</label>
-                                        <input type="number" class="form-control" id="installationCost" placeholder="e.g., 1200000" required>
-                                        <small class="text-muted">Auto-filled when system size is selected</small>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-semibold">Monthly Consumption (kWh)</label>
+                                        <label class="form-label fw-semibold">Monthly Power Usage (kWh)</label>
                                         <input type="number" class="form-control" id="monthlyConsumption" placeholder="e.g., 500" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-semibold">Feed-in Tariff (LKR/kWh)</label>
-                                        <input type="number" class="form-control" id="feedInTariff" placeholder="e.g., 27.06" value="27.06" step="0.01" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-semibold">Monthly Generation per kW</label>
-                                        <input type="number" class="form-control" id="monthlyGenerationPerKW" placeholder="e.g., 130" value="130" step="1" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-semibold">System Losses (%)</label>
-                                        <input type="number" class="form-control" id="systemLosses" placeholder="e.g., 12" value="12" min="0" max="20" step="0.1" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-semibold">Maintenance Cost (LKR/year)</label>
-                                        <input type="number" class="form-control" id="maintenanceCost" placeholder="e.g., 5000" value="5000" min="0" step="100">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-semibold">Electricity Tariff Increase (%/year)</label>
-                                        <input type="number" class="form-control" id="tariffIncrease" placeholder="e.g., 5" value="5" min="0" max="20" step="0.1">
                                     </div>
                                 </div>
                                 
                                 <div class="mt-4">
                                     <button type="submit" class="btn btn-primary btn-lg w-100">
-                                        <i class="fas fa-calculator me-2"></i>Calculate ROI
+                                        <i class="fas fa-calculator me-2"></i>Calculate Solar Benefits
                                     </button>
                                 </div>
                             </form>
+                            
+                            <!-- Results Section Below Button -->
+                            <div id="calculatorResults" class="mt-4 d-none">
+                                <hr class="my-4">
+                                <h5 class="fw-bold text-dark mb-3">
+                                    <i class="fas fa-chart-line me-2 text-primary"></i>Calculation Results
+                                </h5>
+                                
+                                <!-- 4 Cards in Flex Layout -->
+                                <div class="row g-3">
+                                    <!-- Installation Fee Card -->
+                                    <div class="col-md-6">
+                                        <div class="result-card bg-primary text-white p-3 rounded text-center">
+                                            <div class="result-icon mb-2">
+                                                <i class="fas fa-money-bill-wave fa-2x"></i>
+                                            </div>
+                                            <h6 class="mb-2">Installation Fee</h6>
+                                            <div class="result-value fs-5 fw-bold" id="installationCostDisplay">LKR 0</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Monthly Generation Card -->
+                                    <div class="col-md-6">
+                                        <div class="result-card bg-success text-white p-3 rounded text-center">
+                                            <div class="result-icon mb-2">
+                                                <i class="fas fa-solar-panel fa-2x"></i>
+                                            </div>
+                                            <h6 class="mb-2">Monthly Generation</h6>
+                                            <div class="result-value fs-5 fw-bold" id="monthlyGeneration">0 kWh</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Monthly Income Card -->
+                                    <div class="col-md-6">
+                                        <div class="result-card bg-info text-white p-3 rounded text-center">
+                                            <div class="result-icon mb-2">
+                                                <i class="fas fa-chart-line fa-2x"></i>
+                                            </div>
+                                            <h6 class="mb-2">Monthly Income</h6>
+                                            <div class="result-value fs-5 fw-bold" id="totalMonthlyBenefit">LKR 0</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Investment Recovery Card -->
+                                    <div class="col-md-6">
+                                        <div class="result-card bg-warning text-dark p-3 rounded text-center">
+                                            <div class="result-icon mb-2">
+                                                <i class="fas fa-clock fa-2x"></i>
+                                            </div>
+                                            <h6 class="mb-2">Investment Recovery</h6>
+                                            <div class="result-value fs-5 fw-bold" id="paybackPeriod">0 Years</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Initial State -->
+                            <div id="calculatorInitial" class="text-center py-4">
+                                <i class="fas fa-calculator text-muted mb-3" style="font-size: 2rem;"></i>
+                                <p class="text-muted mb-0">Select system size and monthly usage to calculate benefits</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -169,85 +201,22 @@
                     <div class="calculator-card h-100">
                         <div class="card-body p-4">
                             <h4 class="fw-bold text-dark mb-4">
-                                <i class="fas fa-chart-line me-2 text-primary"></i>Financial Analysis
+                                <i class="fas fa-info-circle me-2 text-primary"></i>How It Works
                             </h4>
-                            
-                            <div id="calculatorResults" class="d-none">
-                                <!-- Key Metrics -->
-                                <div class="row g-3 mb-4">
-                                    <div class="col-6">
-                                        <div class="metric-card text-center p-3 bg-primary text-white rounded">
-                                            <h5 class="mb-1" id="paybackPeriod">-</h5>
-                                            <small>Payback Period (Years)</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="metric-card text-center p-3 bg-success text-white rounded">
-                                            <h5 class="mb-1" id="roiPercentage">-</h5>
-                                            <small>ROI (%)</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Monthly Benefits -->
-                                <div class="benefit-item mb-3">
-                                    <h6 class="fw-semibold text-dark">Monthly Benefits</h6>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span>Electricity Savings:</span>
-                                        <span class="fw-bold text-success" id="monthlySavings">LKR 0</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span>Surplus Energy Revenue:</span>
-                                        <span class="fw-bold text-primary" id="surplusRevenue">LKR 0</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center border-top pt-2">
-                                        <span class="fw-semibold">Total Monthly Benefit:</span>
-                                        <span class="fw-bold text-success fs-5" id="totalMonthlyBenefit">LKR 0</span>
-                                    </div>
-                                </div>
-                                
-                                <!-- System Performance -->
-                                <div class="benefit-item mb-3">
-                                    <h6 class="fw-semibold text-dark">System Performance</h6>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span>Monthly Generation:</span>
-                                        <span class="fw-bold" id="monthlyGeneration">0 kWh</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span>Self-Consumption:</span>
-                                        <span class="fw-bold" id="selfConsumption">0 kWh</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span>Grid Export:</span>
-                                        <span class="fw-bold" id="gridExport">0 kWh</span>
-                                    </div>
-                                </div>
-                                
-                                <!-- Long-term Analysis -->
-                                <div class="benefit-item mb-3">
-                                    <h6 class="fw-semibold text-dark">25-Year Analysis</h6>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span>Total Savings:</span>
-                                        <span class="fw-bold text-success" id="totalSavings">LKR 0</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span>Net Profit:</span>
-                                        <span class="fw-bold text-success" id="netProfit">LKR 0</span>
-                                    </div>
-                                </div>
-                                
-                                <!-- Chart Placeholder -->
-                                <div class="chart-placeholder mt-4 p-3 bg-light rounded text-center">
-                                    <i class="fas fa-chart-area text-muted mb-2" style="font-size: 2rem;"></i>
-                                    <p class="text-muted mb-0">Interactive charts coming soon!</p>
-                                </div>
+                            <div class="text-muted">
+                                <p><strong>1.</strong> Select your system size (3kW, 5kW, 6kW, or 10kW)</p>
+                                <p><strong>2.</strong> Enter your monthly electricity consumption</p>
+                                <p><strong>3.</strong> Click calculate to see your solar benefits</p>
+                                <p><strong>4.</strong> Results will show below the calculate button</p>
                             </div>
-                            
-                            <!-- Initial State -->
-                            <div id="calculatorInitial" class="text-center py-5">
-                                <i class="fas fa-calculator text-muted mb-3" style="font-size: 3rem;"></i>
-                                <h5 class="text-muted">Enter your details and calculate your solar ROI</h5>
-                                <p class="text-muted">Get instant financial analysis for your solar investment</p>
+                            <div class="mt-4 p-3 bg-light rounded">
+                                <h6 class="fw-bold text-primary">Key Benefits:</h6>
+                                <ul class="list-unstyled mb-0">
+                                    <li><i class="fas fa-check text-success me-2"></i>Reduce electricity bills by up to 90%</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Earn money by selling surplus power to CEB</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>25+ year system lifetime</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Minimal maintenance required</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
@@ -286,12 +255,7 @@
                                 <small>Very Large Home</small>
                             </button>
                         </div>
-                        <div class="col-md-3 col-sm-6">
-                            <button class="btn btn-outline-primary w-100 preset-btn" data-preset="commercial">
-                                <strong>Commercial</strong><br>
-                                <small>Business Setup</small>
-                            </button>
-                        </div>
+
                     </div>
                 </div>
             </div>
