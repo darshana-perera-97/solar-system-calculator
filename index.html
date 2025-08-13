@@ -660,7 +660,8 @@
             constructor() {
                 this.isOpen = false;
                 this.conversationHistory = [];
-                this.backendUrl = 'http://localhost:3031';
+                this.backendUrl = 'http://69.197.187.24:3031';
+                // this.backendUrl = 'http://localhost:3031';
                 this.init();
             }
 
@@ -743,7 +744,10 @@
                 
                 if (this.isOpen) {
                     this.inputField.focus();
-                    this.scrollToBottom();
+                    // Scroll to bottom when opening, with multiple delays to ensure it works
+                    setTimeout(() => this.scrollToBottom(), 100);
+                    setTimeout(() => this.scrollToBottom(), 300);
+                    setTimeout(() => this.scrollToBottom(), 500);
                 }
             }
 
@@ -795,7 +799,8 @@
                     this.addMessage('Sorry, I encountered an error. Please try again.', 'bot error');
                 }
 
-                this.scrollToBottom();
+                // Final scroll to ensure we're at the bottom
+                setTimeout(() => this.scrollToBottom(), 100);
             }
 
             addMessage(content, type) {
@@ -813,6 +818,9 @@
                 `;
 
                 this.messagesContainer.appendChild(messageDiv);
+                
+                // Always scroll to bottom after adding a message
+                this.scrollToBottom();
             }
 
             addTypingIndicator() {
@@ -829,13 +837,26 @@
                     </div>
                 `;
                 this.messagesContainer.appendChild(typingDiv);
+                
+                // Scroll to bottom when typing indicator appears
+                this.scrollToBottom();
+                
                 return typingDiv;
             }
 
             scrollToBottom() {
+                // Immediate scroll
+                this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+                
+                // Additional scroll after a short delay to ensure smooth scrolling
                 setTimeout(() => {
                     this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
-                }, 100);
+                }, 50);
+                
+                // Final scroll after animations complete
+                setTimeout(() => {
+                    this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+                }, 200);
             }
 
             loadChatbotStyles() {
